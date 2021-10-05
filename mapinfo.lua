@@ -86,8 +86,8 @@ local mapinfo = {
 
 		--// unit & ground lighting
 		["groundDiffuseColor"]= {0.35, 0.42, 0.41, 1},
-		["groundAmbientColor"]= {0.42, 0.45, 0.365, 1},
-		["groundSpecularColor"]= {0.1, 0.1, 0.1, 1},
+		["groundAmbientColor"]= {0.42, 0.45, 0.365, 0.5},
+		["groundSpecularColor"]= {0.4, 0.4, 0.4, 1},
 		groundShadowDensity = 0.4,
 		unitAmbientColor    = {0.55, 0.55, 0.45},
 		unitDiffuseColor    = {0.85, 0.85, 0.85},

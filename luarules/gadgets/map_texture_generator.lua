@@ -149,7 +149,19 @@ local function SetMapTexture(texturePool, mapTexX, mapTexZ, topTexX, topTexZ, to
 			fbo = true,
 		}
 	)
-	
+
+	local normtex =  gl.CreateTexture(MAP_X, MAP_Z,
+		{
+			border = false,
+			min_filter = GL.LINEAR,
+			mag_filter = GL.LINEAR,
+			wrap_s = GL.CLAMP_TO_EDGE,
+			wrap_t = GL.CLAMP_TO_EDGE,
+			fbo = true,
+		}
+	)
+
+
 	Spring.Echo("Generated blank fulltex")
 	local topSplattex = USE_SHADING_TEXTURE and gl.CreateTexture(MAP_X, MAP_Z,
 		{
@@ -193,14 +205,43 @@ local function SetMapTexture(texturePool, mapTexX, mapTexZ, topTexX, topTexZ, to
 		},
 	});
 
-
-	Spring.Echo(gl.GetShaderLog())
 	if(diffuseShader) then
 		Spring.Echo("Diffuse shader created");
 	else
-		Spring.Echo("SHADER ERROR");
+		Spring.Echo("DIFFUSE SHADER ERROR");
 		Spring.Echo(gl.GetShaderLog())
 
+		mapfullyprocessed = true
+		return
+	end
+
+	fragSrc = '#define NORMALIZE_OUT\n' .. fragSrc
+
+	local normShader = glCreateShader({
+		vertex = vertSrc,
+		fragment = fragSrc,
+		uniformInt = {
+			tex0 = 0,
+			tex1 = 1,
+			tex2 = 2,
+			tex3 = 3,
+			tex4 = 4,
+			tex5 = 5,
+			tex6 = 6,
+			tex7 = 7,
+			tex8 = 8,
+			tex9 = 9,
+			tex10 = 10,
+			tex11 = 11,
+		},
+	});
+
+	Spring.Echo(gl.GetShaderLog())
+	if(normShader) then
+		Spring.Echo("Normal shader created");
+	else
+		Spring.Echo("NORMAL SHADER ERROR");
+		Spring.Echo(gl.GetShaderLog())
 		mapfullyprocessed = true
 		return
 	end
@@ -315,7 +356,56 @@ local function SetMapTexture(texturePool, mapTexX, mapTexZ, topTexX, topTexZ, to
 		glDeleteShader(diffuseShader);
 
 		cur = Spring.GetTimer()
-		Spring.Echo("Specular rendered in "..(Spring.DiffTimers(cur, ago, true)))
+		Spring.Echo("Specular rendered in "..(Spring.DiffTimers(cur, agoSpec, true)))
+
+
+		local agoNorm = Spring.GetTimer();
+		Spring.Echo("Starting to render normals")
+		glRenderToTexture(normtex, function ()
+			glUseShader(normShader)
+			glTexture(0, "$heightmap")
+			glTexture(0, false)
+			glTexture(1,"$normals")
+			glTexture(1, false)
+			glTexture(2,":l:unittextures/tacticalview/terran/normal/flats.png");
+			glTexture(2, false)
+			glTexture(3,":l:unittextures/tacticalview/terran/normal/cliffs.png");
+			glTexture(3, false)
+			glTexture(4,":l:unittextures/tacticalview/terran/normal/beach.jpg");
+			glTexture(4, false)
+			glTexture(5,":l:unittextures/tacticalview/terran/normal/midlands.png");
+			glTexture(5, false)
+			glTexture(6,":l:unittextures/tacticalview/terran/normal/highlands.png");
+			glTexture(6, false)
+			glTexture(7,":l:unittextures/tacticalview/terran/normal/slopes.png");
+			glTexture(7, false)
+			glTexture(8,":l:unittextures/tacticalview/terran/normal/ramps.png");
+			glTexture(8, false)
+			glTexture(9,":l:unittextures/tacticalview/terran/normal/cloudgrass.png");
+			glTexture(9, false)
+			glTexture(10,":l:unittextures/tacticalview/terran/normal/cloudgrassdark.png");
+			glTexture(10, false)
+			glTexture(11,":l:unittextures/tacticalview/terran/normal/sand.png");
+			glTexture(11, false)
+			gl.TexRect(-1,-1,1,1,false,true)
+			glUseShader(0)
+		end)
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/flats.png");
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/cliffs.png");
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/beach.jpg");
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/midlands.png");
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/highlands.png");
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/slopes.png");
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/ramps.png");
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/cloudgrass.png");
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/cloudgrassdark.png");
+		glDeleteTexture(":l:unittextures/tacticalview/terran/normal/sand.png");
+		glTexture(false)
+		glDeleteShader(normShader);
+
+
+		cur = Spring.GetTimer()
+		Spring.Echo("Normals rendered in "..(Spring.DiffTimers(cur, agoNorm, true)))
 
 		Spring.Echo("Starting to render SquareTextures")
 		local splattex = USE_SHADING_TEXTURE and gl.CreateTexture(MAP_X, MAP_Z,
@@ -393,7 +483,10 @@ local function SetMapTexture(texturePool, mapTexX, mapTexZ, topTexX, topTexZ, to
 
 		Spring.SetMapShadingTexture("$ssmf_specular", spectex)
 		Spring.Echo("specular applied")
-	
+
+		Spring.SetMapShadingTexture("$ssmf_normals", normtex)
+		Spring.Echo("normals applied")
+
 		Spring.SetMapShadingTexture("$grass", texOut)
 
 		usedgrass = texOut

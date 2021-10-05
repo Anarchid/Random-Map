@@ -118,4 +118,8 @@ void main()
 		factor = smoothstep(255.0,290.0,height)*max(0, 1.0 - slope*2.0 + 0.05);
 		gl_FragColor = mix(gl_FragColor,texture2D(tex6,coord*min(0.82, 0.8 + 0.001*slope)),factor);
 	}
+
+	#ifdef NORMALIZE_OUT
+		gl_FragColor = normalize(gl_FragColor);
+	#endif
 }
